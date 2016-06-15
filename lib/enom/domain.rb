@@ -211,7 +211,6 @@ module Enom
     def auto_renew?
       unless defined?(@auto_renew)
         response = Client.request("Command" => "GetRenew", "SLD" => sld, "TLD" => tld)["interface_response"]["auto_renew"]
-        puts "response:", response
         @auto_renew = response == "1"
       end
       @auto_renew
