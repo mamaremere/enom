@@ -5,6 +5,7 @@ module Enom
   class Domain
     include HTTParty
     include ContactInfo
+    include EmailInfo
 
     # The domain name on Enom
     attr_reader :name
@@ -108,7 +109,7 @@ module Enom
       sld, tld = parse_sld_and_tld(name)
       opts = {}
       options = options.dup
-      
+
       if options[:nameservers]
         count = 1
         options.delete(:nameservers).each do |nameserver|
@@ -121,7 +122,7 @@ module Enom
 
       opts.merge!("NumYears" => options.delete(:years)) if options[:years]
       opts.merge!(options)
-                  
+
       response = Client.request({"Command" => "Purchase", "SLD" => sld, "TLD" => tld}.merge(opts))
       Domain.find(name)
     end
@@ -205,6 +206,15 @@ module Enom
       Client.request("Command" => "SetRegLock", "SLD" => sld, "TLD" => tld, "UnlockRegistrar" => "1")
       @locked = false
       return self
+    end
+
+    def auto_renew?
+      unless defined?(@auto_renew)
+        response = Client.request("Command" => "GetRenew", "SLD" => sld, "TLD" => tld)["interface_response"]["auto_renew"]
+        puts "response:", response
+        @auto_renew = response == "1"
+      end
+      @auto_renew
     end
 
     #
